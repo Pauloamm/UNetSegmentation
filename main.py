@@ -11,107 +11,6 @@ from PIL import Image
 from tensorflow.keras.utils import plot_model, to_categorical
 
 
-CITYSCAPE_CLASSES = [
-"Animal",
-"Archway",
-"Bicyclist",
-"Bridge",
-"Building",
-"Car",
-"CartLuggagePram",
-"Child",
-"Column_Pole",
-"Fence",
-"LaneMkgsDriv",
-"LaneMkgsNonDriv",
-"Misc_Text",
-"MotorcycleScooter",
-"OtherMoving",
-"ParkingBlock",
-"Pedestrian",
-"Road",
-"RoadShoulder",
-"Sidewalk",
-"SignSymbol",
-"Sky",
-"SUVPickupTruck",
-"TrafficCone",
-"TrafficLight",
-"Train",
-"Tree",
-"Truck_Bus",
-"Tunnel",
-"VegetationMisc",
-"Void",
-"Wall"]
-
-CITYSCAPE_CLASSES_RGB = {
-    (64 ,128, 64):  "Animal",
-    (192, 0 ,128):  "Archway",
-    (0 ,128 ,192):  "Bicyclist",
-    (0 ,128 ,64	):  "Bridge",
-    (128 ,0 ,0	):  "Building",
-    (64 ,0 ,128	):  "Car",
-    (64 ,0 ,192	):  "CartLuggagePram",
-    (192 ,128, 64): "Child",
-    (192 ,192 ,128):"Column_Pole",
-    (64 ,64 ,128):  "Fence",
-    (128 ,0 ,192):  "LaneMkgsDriv",
-    (192 ,0 ,64	):  "LaneMkgsNonDriv",
-    (128 ,128, 64): "Misc_Text",
-    (192 ,0 ,192):  "MotorcycleScooter",
-    (128 ,64 ,64):  "OtherMoving",
-    (64 ,192 ,128): "ParkingBlock",
-    (64 ,64 ,0)	:   "Pedestrian",
-    (128 ,64 ,128):	"Road",
-    (128, 128 ,192):"RoadShoulder",
-    (0 ,0 ,192):    "Sidewalk",
-    (192 ,128, 128):"SignSymbol",
-    (128 ,128 ,128):"Sky",
-    (64 ,128 ,192): "SUVPickupTruck",
-    (0 ,0 ,64):     "TrafficCone",
-    (0 ,64, 64):    "TrafficLight",
-    (192 ,64, 128): "Train",
-    (128 ,128, 0):  "Tree",
-    (192 ,128 ,192):"Truck_Bus",
-    (64 ,0 ,64	):  "Tunnel",
-    (192, 192, 0):  "VegetationMisc",
-    (0 ,0 ,0):      "Void",
-    (64, 192 ,0	):  "Wall"
-}
-
-
-
-
-
-# define CONSTANTS
-CLASSES = [  # GTA V dataset classes
-    7, 8, 11, 12, 13, 17, 19, 20, 21,
-    22, 23, 24, 25, 26, 27, 28, 31, 32, 33
-]
-#MASK_COLORS = {  # GTA V dataset classes colors
-#    11: [70, 70, 70],  23: [70, 130, 180],  17: [153, 153, 153],  0: [0, 0, 0],
-#    21: [107, 142, 35],  15: [100, 100, 150],  5: [111, 74, 0],
-#    22: [152, 251, 152],  13: [190, 153, 153],  12: [102, 102, 156],
-#    24: [220, 20, 60],  6: [81, 0, 81],  27: [0, 0, 70],
-#    7: [128, 64, 128],  19: [250, 170, 30],  20: [220, 220, 0],
-#    4: [20, 20, 20],  26: [0, 0, 142],  32: [0, 0, 230],
-#    8: [244, 35, 232],  34: [0, 0, 142],  1: [0, 0, 0],  16: [150, 120, 90],
-#    14: [180, 165, 180],  28: [0, 60, 100],  31: [0, 80, 100],  25: [255, 0, 0],
-#    33: [119, 11, 32],  30: [0, 0, 110]
-#}
-
-MASK_COLORS = {  # GTA V dataset classes colors
-    11: [70, 70, 70],  23: [180, 130, 70],  17: [153, 153, 153],  0: [0, 0, 0],
-    21: [35, 142, 107],  15: [150, 100, 100],  5: [0, 74, 111],
-    22: [152, 251, 152],  13: [153, 153, 190],  12: [156, 102, 102],
-    24: [60, 20, 220],  6: [81, 0, 81],  27: [70, 0, 0],
-    7: [128, 64, 128],  19: [30, 170, 250],  20: [0, 220, 220],
-    4: [20, 20, 20],  26: [142, 0, 0],  32: [230, 0, 0],
-    8: [232, 35, 244],  34: [142, 0, 0],  1: [0, 0, 0],  16: [90, 120, 150],
-    14: [180, 165, 180],  28: [100, 60, 0],  31: [100, 80, 0],  25: [0, 0, 255],
-    33: [32, 11, 119],  30: [110, 0, 0]
-}
 
 classes = ['unlabeled', 'ego vehicle', 'rectification border', 'out of roi', 'static',
            'dynamic', 'ground', 'road', 'sidewalk', 'parking',
@@ -139,7 +38,7 @@ inputSize = (256, 256)
 maskSize = (256, 256)
 
 
-batchSize = 8
+batchSize = 16
 epochs = 100
 learning_rate = 1e-4
 numClasses = len(classes)
@@ -243,9 +142,6 @@ def getRGBImage(tile, normalize=True):
 def augmentImage(image, inputSize, label, labelSize, aug_dict):
 
 
-    widthRange = range(image.shape[1]-inputSize[0])
-    heightRange = range(image.shape[0]-inputSize[1])
-
     if 'width_shift_range' in aug_dict:
         cropx = r.sample((aug_dict['width_shift_range']), 1)[0]
     else:
@@ -263,22 +159,12 @@ def augmentImage(image, inputSize, label, labelSize, aug_dict):
         do_horizontal_flip = False
 
 
-    #Tranform Image
-
-    #channel = image[0]
-    #image = cv2.resize(image,inputSize)
-
-
-
-    #image[0] = channel
-
-
-
-    # Tranform Mask
+    # Crop
 
     image = image[cropy:cropy + inputSize[0], cropx:cropx + inputSize[1]]
     label = label[cropy:cropy + maskSize[0], cropx:cropx + maskSize[1]]
 
+    #Horizontal flip
     if do_horizontal_flip:
         image = image[:, ::-1]
         label = label[:, ::-1]
@@ -317,24 +203,6 @@ def trainGenerator(batch_size, trainSetX, trainSetY, aug_dict, inputSize=(256, 2
 
                         augImage = np.array(augImage)
                         augLabel = np.array(augLabel)
-
-                        showAugs = False
-                        if (showAugs):
-                            plt.figure(figsize=(6, 3))
-                            plt.subplot(1, 2, 1)
-                            plt.grid(False)
-                            plt.xticks([])
-                            plt.yticks([])
-                            plt.imshow(augImage)
-                            plt.xlabel("Image")
-                            plt.subplot(1, 2, 2)
-                            plt.grid(False)
-                            plt.xticks([])
-                            plt.yticks([])
-                            plt.imshow(augLabel)
-                            plt.xlabel("Mask")
-                            plt.show()
-
 
                         masks[iTileInBatch] = augLabel
                         images[iTileInBatch] = augImage
@@ -477,6 +345,7 @@ def unetCustom(pretrained_weights=None, inputSize=(256, 256, 1), numClass=2, do_
     if do_batch_normalization:
         conv9 = tf.keras.layers.BatchNormalization()(conv9)
     conv9 = tf.keras.layers.Activation('relu')(conv9)
+    #conv10 = tf.keras.layers.Conv2D(numClass, 1, activation='softmax', kernel_initializer='he_normal')(conv9)
     conv10 = tf.keras.layers.Conv2D(numClass, 1, activation='softmax', kernel_initializer='he_normal')(conv9)
 
     model = tf.keras.models.Model(inputs=inputs, outputs=conv10)
@@ -485,7 +354,7 @@ def unetCustom(pretrained_weights=None, inputSize=(256, 256, 1), numClass=2, do_
 
     model.compile(optimizer=tf.keras.optimizers.Adam(learning_rate),
                   loss='categorical_crossentropy',
-                  metrics=[tf.keras.metrics.MeanIoU(num_classes=numClasses), "accuracy"])
+                  metrics=['accuracy' ])
 
     model.summary()
 
@@ -501,11 +370,7 @@ def do_center_crop(image, newSize):
     cropy = (int)((image.shape[0] - newSize[0]) / 2)
     cropx = (int)((image.shape[1] - newSize[1]) / 2)
 
-
-    #for i in range(len(image)):
-        #channel = image[i]
     image = image[cropy:cropy+newSize[0] , cropx:cropx+newSize[1]]
-        #image[i] = channel
 
     return image
 
@@ -557,7 +422,7 @@ def saveResults(testSetX, results, resultsPath):
             plt.grid(False)
             plt.xticks([])
             plt.yticks([])
-            plt.imshow(image, cmap='gray')
+            plt.imshow(image)
             plt.xlabel("Image - {}".format(os.path.basename(imagePath)))
             plt.subplot(1, 2, 2)
             plt.grid(False)
@@ -677,7 +542,8 @@ def main():
     else:
 
         if testSize > -1:
-            testSetX = testSetX[0:testSize]
+            testSetX = valSetX[0:testSize]
+            #testSetX = testSetX[0:testSize]
         # load best model
         model = unetCustom(pretrained_weights=modelFilePath,
                            inputSize=(256, 256, 3),
@@ -731,7 +597,7 @@ def main():
     # plt.xlabel('Batch')
     # plt.legend(['Train'], loc='upper right')
 
-        plt.show()
+        #plt.show()
 
 
 if __name__ == '__main__':
