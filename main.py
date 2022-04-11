@@ -38,7 +38,7 @@ inputSize = (256, 256)
 maskSize = (256, 256)
 
 
-batchSize = 16
+batchSize = 8
 epochs = 100
 learning_rate = 1e-4
 numClasses = len(classes)
@@ -47,7 +47,7 @@ showImages = False
 timestamp = datetime.datetime.now().strftime("%Y%m%d-%H%M%S")
 resultsPath = "Predictions"
 logs_folder = "GTAVDataset" + "E" + str(epochs) + "_LR" + str(learning_rate) + "_" + timestamp
-testepath = "teste.hdf5"
+testepath = "testeBM.hdf5"
 
 
 augmentation_args = dict(
@@ -493,7 +493,7 @@ def main():
 
         model = unetCustom(inputSize=(256, 256, 3),
                            numClass=numClasses,
-                           do_batch_normalization=False,
+                           do_batch_normalization=True,
                            use_transpose_convolution=False)
         plot_model(model,
                    to_file='modelUnet.png',
@@ -548,7 +548,7 @@ def main():
         model = unetCustom(pretrained_weights=modelFilePath,
                            inputSize=(256, 256, 3),
                            numClass=numClasses,
-                           do_batch_normalization=False,
+                           do_batch_normalization=True,
                            use_transpose_convolution=False)
 
 
