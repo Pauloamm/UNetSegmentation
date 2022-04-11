@@ -162,6 +162,7 @@ datasetPath = "Dataset"
 trainFolder = "train"
 valFolder = "val"
 modelPath :str
+modelFilePath:str
 
 def prepareDataset():
 
@@ -180,6 +181,8 @@ def prepareDataset():
     global modelPath
     modelPath = os.path.join(base_dir, "model")
 
+    global modelFilePath
+    modelFilePath = os.path.join(modelPath, testepath)
 
 
 
@@ -583,129 +586,134 @@ class BatchLossHistory(tf.keras.callbacks.Callback):
 
 
 def main():
+
+    isTraining = False
+
     r.seed(1)
     trainSetX, trainSetY, valSetX, valSetY, testSetX = prepareDataset()
 
+    if(isTraining):
 
-    # batch_history = BatchLossHistory()
-    if trainSize > 0:
-        trainSetX = trainSetX[0:trainSize]
-        trainSetY = trainSetY[0:trainSize]
-    if valSize > 0:
-        valSetX = valSetX[0:valSize]
-        valSetY = valSetY[0:valSize]
-    if testSize > -1:
-        testSetX = testSetX[0:testSize]
-
-
-    trainGene = trainGenerator(batchSize,
-                               trainSetX,
-                               trainSetY,
-                               augmentation_args,
-                               inputSize=inputSize,
-                               inputChannels=3,
-                               maskSize=maskSize,
-                               numClasses=numClasses)
-
-
-    valGene = trainGenerator(batchSize,
-                             valSetX,
-                             valSetY,
-                             dict(),
-                             inputSize=inputSize,
-                             inputChannels=3,
-                             maskSize=maskSize,
-                             numClasses=numClasses)
+        # batch_history = BatchLossHistory()
+        if trainSize > 0:
+            trainSetX = trainSetX[0:trainSize]
+            trainSetY = trainSetY[0:trainSize]
+        if valSize > 0:
+            valSetX = valSetX[0:valSize]
+            valSetY = valSetY[0:valSize]
 
 
 
+        trainGene = trainGenerator(batchSize,
+                                   trainSetX,
+                                   trainSetY,
+                                   augmentation_args,
+                                   inputSize=inputSize,
+                                   inputChannels=3,
+                                   maskSize=maskSize,
+                                   numClasses=numClasses)
 
-    modelFilePath = os.path.join(modelPath, testepath)
-    model = unetCustom(inputSize=(256, 256, 3),
-                       numClass=numClasses,
-                       do_batch_normalization=False,
-                       use_transpose_convolution=False)
-    plot_model(model,
-               to_file='modelUnet.png',
-               show_shapes=True,
-               show_dtype=True,
-               show_layer_names=True,
-               rankdir='LR',
-               expand_nested=True)
+
+        valGene = trainGenerator(batchSize,
+                                 valSetX,
+                                 valSetY,
+                                 dict(),
+                                 inputSize=inputSize,
+                                 inputChannels=3,
+                                 maskSize=maskSize,
+                                 numClasses=numClasses)
 
 
 
 
-    # Early Stop Callback
-    numberEpochsNoImprovement = 4
-    metricToMeasureStopCallback = 'loss'
-    earlyStopCallback = tf.keras.callbacks.EarlyStopping(monitor=metricToMeasureStopCallback,
+        model = unetCustom(inputSize=(256, 256, 3),
+                           numClass=numClasses,
+                           do_batch_normalization=False,
+                           use_transpose_convolution=False)
+        plot_model(model,
+                   to_file='modelUnet.png',
+                   show_shapes=True,
+                   show_dtype=True,
+                   show_layer_names=True,
+                   rankdir='LR',
+                   expand_nested=True)
+
+
+
+
+        # Early Stop Callback
+        numberEpochsNoImprovement = 4
+        metricToMeasureStopCallback = 'loss'
+        earlyStopCallback = tf.keras.callbacks.EarlyStopping(monitor=metricToMeasureStopCallback,
                                                          patience=numberEpochsNoImprovement)
 
-    model_checkpoint = tf.keras.callbacks.ModelCheckpoint(modelFilePath,
-                                                          monitor='val_loss',
-                                                          verbose=1,
-                                                          save_best_only=True)
-    log_dir = os.path.join("logs", "fit", logs_folder)
-    tensorboard_callback = tf.keras.callbacks.TensorBoard(log_dir=log_dir,
-                                                          histogram_freq=1)
+        model_checkpoint = tf.keras.callbacks.ModelCheckpoint(modelFilePath,
+                                                              monitor='val_loss',
+                                                              verbose=1,
+                                                              save_best_only=True)
+        log_dir = os.path.join("logs", "fit", logs_folder)
+        tensorboard_callback = tf.keras.callbacks.TensorBoard(log_dir=log_dir,
+                                                              histogram_freq=1)
 
 
 
-    Ntrain = len(trainSetX)
-    stepsPerEpoch = np.ceil(Ntrain / batchSize)
-    Nval = len(valSetX)
-    validationSteps = np.ceil(Nval / batchSize)
+        Ntrain = len(trainSetX)
+        stepsPerEpoch = np.ceil(Ntrain / batchSize)
+        Nval = len(valSetX)
+        validationSteps = np.ceil(Nval / batchSize)
 
-    history = model.fit(trainGene,
-                       steps_per_epoch=stepsPerEpoch,
-                        epochs=epochs,
-                        callbacks=[model_checkpoint,
-                                   # batch_history,
-                                   tensorboard_callback,
-                                   earlyStopCallback
-                                   ],
-                        validation_data=valGene,
-                        validation_steps=validationSteps)
-
-
-
-    # load best model
-    model = unetCustom(pretrained_weights=modelFilePath,
-                       inputSize=(256, 256, 3),
-                       numClass=numClasses,
-                       do_batch_normalization=False,
-                       use_transpose_convolution=False)
+        history = model.fit(trainGene,
+                           steps_per_epoch=stepsPerEpoch,
+                            epochs=epochs,
+                            callbacks=[model_checkpoint,
+                                       # batch_history,
+                                       tensorboard_callback,
+                                       earlyStopCallback
+                                       ],
+                            validation_data=valGene,
+                            validation_steps=validationSteps)
 
 
+    else:
 
-    testGene = testGenerator(testSetX, inputSize=inputSize, inputChannels=3)
+        if testSize > -1:
+            testSetX = testSetX[0:testSize]
+        # load best model
+        model = unetCustom(pretrained_weights=modelFilePath,
+                           inputSize=(256, 256, 3),
+                           numClass=numClasses,
+                           do_batch_normalization=False,
+                           use_transpose_convolution=False)
 
-    NTest = len(testSetX)
-    testSteps = np.ceil(NTest / batchSize)
-    results = model.predict(testGene, verbose=1,batch_size=batchSize,steps=testSteps)
 
 
-    if not os.path.exists(resultsPath):
-        os.makedirs(resultsPath)
-    saveResults(testSetX, results, resultsPath)
+        testGene = testGenerator(testSetX, inputSize=inputSize, inputChannels=3)
 
-    plt.subplot(2, 2, 1)
-    plt.plot(model.history['accuracy'])
-    plt.plot(model.history['val_accuracy'])
-    plt.title('Model accuracy')
-    plt.ylabel('Accuracy')
-    plt.xlabel('Epoch')
-    plt.legend(['Train', 'Test'], loc='lower right')
+        NTest = len(testSetX)
+        testSteps = np.ceil(NTest / batchSize)
+        results = model.predict(testGene, verbose=1,batch_size=batchSize,steps=testSteps)
 
-    # Plot training & validation loss values
-    plt.subplot(2, 2, 2)
-    plt.plot(model.history['loss'])
-    plt.plot(model.history['val_loss'])
-    plt.title('Model loss')
-    plt.ylabel('Loss')
-    plt.xlabel('Epoch')
-    plt.legend(['Train', 'Test'], loc='upper right')
+
+        if not os.path.exists(resultsPath):
+            os.makedirs(resultsPath)
+        saveResults(testSetX, results, resultsPath)
+
+        #plt.subplot(2, 2, 1)
+        #plt.plot(model.history['accuracy'])
+        #plt.plot(model.history['val_accuracy'])
+        #plt.title('Model accuracy')
+        #plt.ylabel('Accuracy')
+        #plt.xlabel('Epoch')
+        #plt.legend(['Train', 'Test'], loc='lower right')
+#
+        ## Plot training & validation loss values
+        #plt.subplot(2, 2, 2)
+        #plt.plot(model.history['loss'])
+        #plt.plot(model.history['val_loss'])
+        #plt.title('Model loss')
+        #plt.ylabel('Loss')
+        #plt.xlabel('Epoch')
+        #plt.legend(['Train', 'Test'], loc='upper right')
 
     # plt.subplot(2, 2, 3)
     # plt.plot(moving_average(batch_history.batch_accuracies, 5))
@@ -723,7 +731,7 @@ def main():
     # plt.xlabel('Batch')
     # plt.legend(['Train'], loc='upper right')
 
-    plt.show()
+        plt.show()
 
 
 if __name__ == '__main__':
